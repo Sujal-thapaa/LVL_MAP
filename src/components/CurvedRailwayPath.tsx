@@ -5,7 +5,7 @@ import { Level } from '../types';
 interface CurvedRailwayPathProps {
   levels: Level[];
   currentLevel: number;
-  progress: number; // 0..1 progress along the full path for the red dashed overlay
+  progress: number; // 0..1 progress along the full path for the red dotted overlay
 }
 
 const CurvedRailwayPath: React.FC<CurvedRailwayPathProps> = ({ levels, currentLevel, progress }) => {
@@ -56,6 +56,23 @@ const CurvedRailwayPath: React.FC<CurvedRailwayPathProps> = ({ levels, currentLe
         viewBox="0 0 100 100"
         preserveAspectRatio="none"
       >
+        <defs>
+          {/* Create a mask that reveals progressively */}
+          <mask id="progressMask">
+            <motion.path
+              d={pathData}
+              stroke="white"
+              strokeWidth="3"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: Math.max(0, Math.min(1, progress)) }}
+              transition={{ duration: 0 }}
+            />
+          </mask>
+        </defs>
+
         {/* Fixed, permanent black base path (never changes) */}
         <path
           d={pathData}
@@ -66,18 +83,16 @@ const CurvedRailwayPath: React.FC<CurvedRailwayPathProps> = ({ levels, currentLe
           strokeLinejoin="round"
         />
 
-        {/* Single red dashed overlay showing cumulative progress */}
-        <motion.path
+        {/* Full dotted red path with progressive mask */}
+        <path
           d={pathData}
           stroke="#DC2626"
           strokeWidth="0.3"
           fill="none"
           strokeLinecap="round"
           strokeLinejoin="round"
-          strokeDasharray="2 3"
-          initial={{ pathLength: 0 }}
-          animate={{ pathLength: Math.max(0, Math.min(1, progress)) }}
-          transition={{ duration: 0 }}
+          strokeDasharray="0.5 1"
+          mask="url(#progressMask)"
         />
       </svg>
     </div>

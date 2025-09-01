@@ -51,10 +51,32 @@ const LevelMap: React.FC = () => {
   const totalSegments = 6; // between 7 levels
   // Overall path progress across all segments: completed full segments + partial while moving
   const pathProgress = useMemo(() => {
-    const completedSegments = Math.max(0, currentLevel - 1); // segments completed end-to-start
-    const base = completedSegments / totalSegments;
-    return Math.min(1, base + (partialProgress / totalSegments));
-  }, [currentLevel, partialProgress]);
+    if (isMoving) {
+      // During movement, calculate progress based on actual character position
+      const currentLevelIndex = currentLevel - 1;
+      const nextLevelIndex = currentLevel;
+      
+      if (currentLevelIndex >= 0 && nextLevelIndex < levels.length) {
+        const currentPos = levels[currentLevelIndex]?.position;
+        const nextPos = levels[nextLevelIndex]?.position;
+        
+        if (currentPos && nextPos) {
+          // Calculate how far along the current segment the character is
+          const segmentProgress = partialProgress;
+          
+          // Calculate total progress: completed segments + current segment progress
+          const completedSegments = Math.max(0, currentLevel - 1);
+          const totalProgress = (completedSegments + segmentProgress) / totalSegments;
+          
+          return Math.min(1, totalProgress);
+        }
+      }
+    }
+    
+    // When not moving, show completed segments
+    const completedSegments = Math.max(0, currentLevel - 1);
+    return Math.min(1, completedSegments / totalSegments);
+  }, [currentLevel, partialProgress, isMoving, levels, totalSegments]);
 
   const getLevelStatus = useCallback((level: Level): LevelStatus => {
     if (level.isCompleted) return LevelStatus.COMPLETED;
