@@ -8,6 +8,7 @@ import ProgressBar from './ProgressBar';
 import LevelTooltip from './LevelTooltip';
 import SoundManager from './SoundManager';
 import AboutModal from './AboutModal';
+import GuideCharacter from './GuideCharacter';
 import { Info, Volume2, VolumeX } from 'lucide-react';
 
 const LevelMap: React.FC = () => {
@@ -25,16 +26,18 @@ const LevelMap: React.FC = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [logoPosition, setLogoPosition] = useState({ x: 15, y: 85 });
   const [partialProgress, setPartialProgress] = useState(0); // 0..1 progress between current and next level while moving
+  const [showGuide, setShowGuide] = useState(false);
+  const [guideImageIndex, setGuideImageIndex] = useState(0);
 
   // Define level positions along the curved path (Candy Crush style)
   const levelData = useMemo(() => [
-    { id: 1, x: 15, y: 85, difficulty: 'Easy' as const, stars: 1, description: 'Welcome! Start your journey here.', color: 'from-pink-400 to-pink-600' },
-    { id: 2, x: 50, y: 65, difficulty: 'Easy' as const, stars: 1, description: 'Learn the basics with simple challenges.', color: 'from-blue-400 to-blue-600' },
-    { id: 3, x: 85, y: 55, difficulty: 'Easy' as const, stars: 2, description: 'Getting warmed up? Try some combos!', color: 'from-purple-400 to-purple-600' },
-    { id: 4, x: 50, y: 45, difficulty: 'Medium' as const, stars: 2, description: 'Things are heating up now!', color: 'from-yellow-400 to-yellow-600' },
-    { id: 5, x: 15, y: 35, difficulty: 'Medium' as const, stars: 2, description: 'Strategic thinking required.', color: 'from-green-400 to-green-600' },
-    { id: 6, x: 50, y: 25, difficulty: 'Medium' as const, stars: 2, description: 'Complex patterns await you.', color: 'from-orange-400 to-orange-600' },
-    { id: 7, x: 85, y: 15, difficulty: 'Hard' as const, stars: 3, description: 'Expert level challenges ahead!', color: 'from-red-400 to-red-600' },
+    { id: 1, x: 15, y: 85, difficulty: 'Easy' as const, stars: 1, description: 'Welcome! Start your journey here.', color: 'from-pink-400 to-pink-600', icon: '🌟' },
+    { id: 2, x: 50, y: 65, difficulty: 'Easy' as const, stars: 1, description: 'Learn the basics with simple challenges.', color: 'from-blue-400 to-blue-600', icon: '⚡' },
+    { id: 3, x: 85, y: 55, difficulty: 'Easy' as const, stars: 2, description: 'Getting warmed up? Try some combos!', color: 'from-purple-400 to-purple-600', icon: '🔥' },
+    { id: 4, x: 50, y: 45, difficulty: 'Medium' as const, stars: 2, description: 'Things are heating up now!', color: 'from-yellow-400 to-yellow-600', icon: '💎' },
+    { id: 5, x: 15, y: 35, difficulty: 'Medium' as const, stars: 2, description: 'Strategic thinking required.', color: 'from-green-400 to-green-600', icon: '🎯' },
+    { id: 6, x: 50, y: 25, difficulty: 'Medium' as const, stars: 2, description: 'Complex patterns await you.', color: 'from-orange-400 to-orange-600', icon: '🚀' },
+    { id: 7, x: 85, y: 15, difficulty: 'Hard' as const, stars: 3, description: 'Expert level challenges ahead!', color: 'from-red-400 to-red-600', icon: '👑' },
   ], []);
 
   const levels: Level[] = useMemo(() => 
@@ -44,6 +47,7 @@ const LevelMap: React.FC = () => {
       isCompleted: completedLevels.includes(data.id),
       isUnlocked: data.id <= currentLevel,
       isCurrent: data.id === currentLevel,
+      icon: data.icon,
     })),
     [levelData, currentLevel, completedLevels]
   );
@@ -94,37 +98,44 @@ const LevelMap: React.FC = () => {
   const handleNext = useCallback(() => {
     if (currentLevel <= 7) {
       if (currentLevel < 7) {
-        setIsMoving(true);
-        const currentPos = levels.find(l => l.id === currentLevel)?.position || { x: 15, y: 85 };
-        const nextPos = levels.find(l => l.id === currentLevel + 1)?.position || { x: 15, y: 85 };
-        const startTime = Date.now();
-        const duration = 2000; // faster to reduce perceived lag
-        const animateLogo = () => {
-          const elapsed = Date.now() - startTime;
-          const progress = Math.min(elapsed / duration, 1);
-          const easeProgress = 1 - Math.pow(1 - progress, 3);
-          setPartialProgress(easeProgress);
-          const currentX = currentPos.x + (nextPos.x - currentPos.x) * easeProgress;
-          const currentY = currentPos.y + (nextPos.y - currentPos.y) * easeProgress;
-          setLogoPosition({ x: currentX, y: currentY });
-          if (progress < 1) {
-            requestAnimationFrame(animateLogo);
-          } else {
-            // Movement finished: now mark level completed and advance
-            setCompletedLevels(prev => Array.from(new Set([...prev, currentLevel])));
-            setSoundTriggers(prev => ({ ...prev, levelComplete: true }));
-            setCurrentLevel(prev => prev + 1);
-            setShowUnlockAnimation(currentLevel + 1);
-            setSoundTriggers(prev => ({ ...prev, levelUnlock: true }));
-            setIsMoving(false);
-            setPartialProgress(0);
-            setLogoPosition(nextPos);
-            setTimeout(() => {
-              setShowUnlockAnimation(null);
-            }, 600);
-          }
-        };
-        requestAnimationFrame(animateLogo);
+        // Show guide character with hint for next level
+        setShowGuide(true);
+        setGuideImageIndex(prev => (prev + 1) % 3); // Cycle through 3 images
+        
+        // Start movement animation after a brief delay
+        setTimeout(() => {
+          setIsMoving(true);
+          const currentPos = levels.find(l => l.id === currentLevel)?.position || { x: 15, y: 85 };
+          const nextPos = levels.find(l => l.id === currentLevel + 1)?.position || { x: 15, y: 85 };
+          const startTime = Date.now();
+          const duration = 2000; // faster to reduce perceived lag
+          const animateLogo = () => {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const easeProgress = 1 - Math.pow(1 - progress, 3);
+            setPartialProgress(easeProgress);
+            const currentX = currentPos.x + (nextPos.x - currentPos.x) * easeProgress;
+            const currentY = currentPos.y + (nextPos.y - currentPos.y) * easeProgress;
+            setLogoPosition({ x: currentX, y: currentY });
+            if (progress < 1) {
+              requestAnimationFrame(animateLogo);
+            } else {
+              // Movement finished: now mark level completed and advance
+              setCompletedLevels(prev => Array.from(new Set([...prev, currentLevel])));
+              setSoundTriggers(prev => ({ ...prev, levelComplete: true }));
+              setCurrentLevel(prev => prev + 1);
+              setShowUnlockAnimation(currentLevel + 1);
+              setSoundTriggers(prev => ({ ...prev, levelUnlock: true }));
+              setIsMoving(false);
+              setPartialProgress(0);
+              setLogoPosition(nextPos);
+              setTimeout(() => {
+                setShowUnlockAnimation(null);
+              }, 600);
+            }
+          };
+          requestAnimationFrame(animateLogo);
+        }, 500); // Small delay to let guide appear first
       }
     }
   }, [currentLevel, levels]);
@@ -137,9 +148,15 @@ const LevelMap: React.FC = () => {
     setShowUnlockAnimation(null);
     setPartialProgress(0);
     setLogoPosition({ x: 15, y: 85 });
+    setShowGuide(false);
+    setGuideImageIndex(0);
     for (let i = 1; i <= 7; i++) {
       localStorage.removeItem(`level${i}Completed`);
     }
+  }, []);
+
+  const handleGuideComplete = useCallback(() => {
+    setShowGuide(false);
   }, []);
 
   const handleLevelHover = useCallback((level: Level | null, position: { x: number; y: number }) => {
@@ -334,6 +351,14 @@ const LevelMap: React.FC = () => {
 
         {/* About Modal */}
         <AboutModal isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
+        
+        {/* Guide Character */}
+        <GuideCharacter
+          isVisible={showGuide}
+          currentLevel={currentLevel + 1} // Show hint for next level
+          imageIndex={guideImageIndex}
+          onComplete={handleGuideComplete}
+        />
       </div>
     </div>
   );

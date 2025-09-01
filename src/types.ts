@@ -1,13 +1,14 @@
 export interface Level {
   id: number;
   position: { x: number; y: number };
-  isCompleted: boolean;
-  isUnlocked: boolean;
-  isCurrent: boolean;
   difficulty: 'Easy' | 'Medium' | 'Hard';
   stars: number;
   description: string;
-  color?: string; // Tailwind gradient classes for distinct level colors
+  isCompleted: boolean;
+  isUnlocked: boolean;
+  isCurrent: boolean;
+  color?: string;
+  icon?: string;
 }
 
 export enum LevelStatus {

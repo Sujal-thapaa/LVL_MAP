@@ -99,7 +99,22 @@ const LevelNode: React.FC<LevelNodeProps> = ({ level, onClick, status, onHover, 
     if (status === LevelStatus.LOCKED) {
       return <Lock size={20} className="text-gray-400" />;
     }
-    return <span className={`${styles.text} font-bold text-xl`}>{level.id}</span>;
+    
+    if (status === LevelStatus.COMPLETED) {
+      return (
+        <div className="text-center">
+          <div className="text-2xl mb-1">{level.icon || level.id}</div>
+          <div className="text-xs text-green-200">Level {level.id}</div>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="text-center">
+        <div className="text-2xl mb-1">{level.icon || level.id}</div>
+        <div className="text-xs text-white/80">Level {level.id}</div>
+      </div>
+    );
   };
 
   return (
@@ -189,8 +204,7 @@ const LevelNode: React.FC<LevelNodeProps> = ({ level, onClick, status, onHover, 
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{
-            delay: level.id * 0.1 + 0.3,
-            duration: 0.5,
+            duration: 0.3,
           }}
         >
           {renderStars()}
