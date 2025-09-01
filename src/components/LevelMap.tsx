@@ -173,7 +173,7 @@ const LevelMap: React.FC = () => {
 
   return (
     <div className="min-h-screen text-white p-4" style={{
-      backgroundImage: 'url("treasure map.jpg")',
+      backgroundImage: 'url("./treasure map.jpg")',
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundRepeat: 'no-repeat'

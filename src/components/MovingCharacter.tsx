@@ -43,7 +43,7 @@ const MovingCharacter: React.FC<MovingCharacterProps> = ({ position, isMoving })
       
       {/* Logo image with enhanced effects */}
       <motion.img
-        src="logo2.png"
+        src="./logo2.png"
         alt="Moving Logo"
         className="relative w-12 h-12 object-contain drop-shadow-lg"
         animate={{
